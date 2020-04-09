@@ -16,10 +16,11 @@ body {
     z-index: 100;
     font-size: 88px;
     font-weight: bold;
-    color: #333;
     text-transform: uppercase;
     top: 100px;
     left: 100px;
+    color: #fbbe09;
+    text-shadow: 0 0 4px black;
 }
 
 .search-container {
@@ -111,7 +112,7 @@ body {
 
 .store-number {
     border: 1px solid grey;
-    background-color: #464242;
+    background-color: #fbbe09;
     color: white;
     width: 20px;
     height: 20px;
@@ -120,4 +121,49 @@ body {
     justify-content: center;
     display: flex;
     border-radius: 50px;
+}
+a { 
+    text-decoration: none; /* Отменяем подчеркивание у ссылки */
+   }
+
+span {
+    display: block;
+}
+
+
+i {
+    color: #fbbe09;;
+  }
+
+
+.info-container {
+    height: 99px;
+    margin: 1px;
+    display: flex;
+}
+
+.info-address {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.info-info {
+    border-bottom: 1px solid grey;
+    color: grey;
+}
+
+
+
+::-webkit-scrollbar {
+    width: 12px;
+}
+ 
+::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); 
+    border-radius: 10px;
+}
+ 
+::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); 
 }
