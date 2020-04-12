@@ -1,9 +1,11 @@
-
+var map;
+var markers = [];
+var infoWindow;
 
 function initMap() {
     map = new google.maps.Map(document.getElementById('map'), {
         center: {lat: 34.063584, lng: -118.376354},
-        zoom: 13,
+        zoom: 14,
         mapTypeId: 'roadmap',
         styles:
 [
@@ -322,65 +324,65 @@ function initMap() {
   ]
     });
 
-    displayStores();
-    showMarkers();
     infoWindow = new google.maps.InfoWindow();
+    searchStores();
 }
 
-var map;
-var markers = [];
-var infoWindow;
 
-function displayStores () {
+function displayStores (stores) {
     var storeHtml = ""
-
+    var bounds = new google.maps.LatLngBounds();
     for (var [index, n] of stores.entries()) {
         var address = n["addressLines"][0];;
         var name = n["name"];
+        var latlng = new google.maps.LatLng(
+          parseFloat(n["coordinates"]["latitude"]),
+          parseFloat(n["coordinates"]["longitude"]));
+        bounds.extend(latlng);
 
         storeHtml+=`
-            <div class="store-container">
-   
-                <div class="store-info">
-                    <div class="store-address">
-                            <span>
-                             <b>${name}</b> <br>
-                            ${address} 
-                            </span>
-                    </div>
-                    <div class="store-phone-number">
-                        ${n["phoneNumber"]}
-                    </div>
-                </div>
-                <div class="store-number-container">
-                    <div class="store-number">
-                    <a href="https://www.google.com/maps?saddr=My+Location&daddr= ${n["coordinates"]["latitude"]},${n["coordinates"]["longitude"]}" onmouseover="showMarkers(this)" >${++index}</a>
-                    </div>
-                </div>
-
+        <div class="border">
+            <div class="store-containter-background">
+              <div class="store-container">
+                  <div class="store-info">
+                      <div class="store-address">
+                              <span>
+                              <b>${name}</b> <br>
+                              ${address} 
+                              </span>
+                      </div>
+                      <div class="store-phone-number">
+                          ${n["phoneNumber"]}
+                      </div>
+                  </div>
+                  <div class="store-number-container">
+                      <div class="store-number">
+                        ${++index}
+                      </div>
+                  </div>
+              </div>
             </div>
+        </div>
         `
     };
+    map.fitBounds(bounds);
     document.querySelector(".stores-list").innerHTML=storeHtml;
 }
 
 
-function showMarkers (){
+function showMarkers (stores){
     for (var [index, store] of stores.entries()) {
-
         var name = store['name'];
         var address = store["addressLines"][0];
         var phone = store["phoneNumber"];
         var schedule = store["schedule"][0]["hours"];
-
         var latlng = new google.maps.LatLng(
             parseFloat(store["coordinates"]["latitude"]),
             parseFloat(store["coordinates"]["longitude"]));
-
-        createMarker(latlng, name, address, index+1, phone, schedule);
+        createMarker(latlng, name, address, index, phone, schedule);
 }
 
-function createMarker(latlng, name, address, index) {
+function createMarker(latlng, name, address, index, phone, schedule) {
     var image = {
         url: 'https://restaurantpetros.ca/wp-content/uploads/chevron-down-icon.png',
         // This marker is 20 pixels wide by 32 pixels high.
@@ -392,26 +394,28 @@ function createMarker(latlng, name, address, index) {
       };
 
 
-    var html = "<div class='info-container'>"+
-    "<span>" +
-    "<b>" + 
-    "<div class='info-address'>" + name + "</div>" +
-    "</b>" +
-    "<div class='info-info'>" + address + "<br>" +"<br>" +"</div>" +
-    "<br>" +
-    "<i class='fas fa-phone-alt'></i> " + 
-    phone +
-    "<br>" +
-    "<i class='fas fa-clock'></i> " +
-    schedule +
-    "</b> <br>" +
-    "</span>" +
-    "</div>";
+    var html =     `<div class='info-container'>
+                      <span>
+                        <b>
+                          <div class='info-address'> ${name} </div>
+                        </b>
+                        <div class='info-info'> ${address}<br><br> </div>
+                        <br>
+                        <i class='fas fa-phone-alt'></i>
+                        ${phone}
+                        <br>
+                        <i class='fas fa-clock'></i> 
+                        ${schedule}
+                        </b> <br>
+                      </span>
+                    </div>`;
 
     var marker = new google.maps.Marker({
       map: map,
       position: latlng,
-      icon: image
+      icon: image,
+      animation: google.maps.Animation.DROP,
+      label: (index+1).toString(),
     });
     google.maps.event.addListener(marker, 'click', function() {
       infoWindow.setContent(html);
@@ -423,6 +427,45 @@ function createMarker(latlng, name, address, index) {
 }
 
 
+function clickOnSotreTrigger () {
+  var storeElements = document.querySelectorAll(".store-container");
+  storeElements.forEach(function(elem, index) {
+    elem.addEventListener("mouseenter", function(){
+      new google.maps.event.trigger(markers[index], "click");
+    });
+  }); 
+}
 
 
+function searchStores (){
+  var foundStores = []
+  var zipCode = document.getElementById("zip-code-input").value;
 
+  if (zipCode) {
+    for (var store of stores) {
+      var postal = store["address"]["postalCode"].substring(0,5);
+        if (postal == zipCode) {
+          foundStores.push(store);
+        }
+      }; 
+    if (foundStores.length == 0) {
+      console.log("NOPE");
+      foundStores = stores;
+    }
+  } else {
+    foundStores = stores;
+  };
+  clearLocations();
+  displayStores(foundStores);
+  showMarkers(foundStores);
+  clickOnSotreTrigger ();
+
+}
+
+function clearLocations() {
+  infoWindow.close();
+  for (var i = 0; i < markers.length; i++) {
+    markers[i].setMap(null);
+  }
+  markers.length = 0;
+}
